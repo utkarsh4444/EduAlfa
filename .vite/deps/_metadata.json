@@ -1,0 +1,72 @@
+{
+  "hash": "4f46e50d",
+  "configHash": "27f1656b",
+  "lockfileHash": "e3b0c442",
+  "browserHash": "0028b13b",
+  "optimized": {
+    "axios": {
+      "src": "../../edualfa/frontend/node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "1aa6a83d",
+      "needsInterop": false
+    },
+    "framer-motion": {
+      "src": "../../edualfa/frontend/node_modules/framer-motion/dist/es/index.mjs",
+      "file": "framer-motion.js",
+      "fileHash": "e9591485",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../edualfa/frontend/node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "df67aa55",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../edualfa/frontend/node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "8e710a2b",
+      "needsInterop": true
+    },
+    "react-hot-toast": {
+      "src": "../../edualfa/frontend/node_modules/react-hot-toast/dist/index.mjs",
+      "file": "react-hot-toast.js",
+      "fileHash": "ab66d427",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../edualfa/frontend/node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "d79097fd",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../edualfa/frontend/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "cc3d6239",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../edualfa/frontend/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "eb7053c2",
+      "needsInterop": true
+    },
+    "socket.io-client": {
+      "src": "../../edualfa/frontend/node_modules/socket.io-client/build/esm/index.js",
+      "file": "socket__io-client.js",
+      "fileHash": "1c32d40a",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-B-1-B7_t": {
+      "file": "chunk-B-1-B7_t.js",
+      "isDynamicEntry": false
+    },
+    "react-dom-FRAmzqTK": {
+      "file": "react-dom-FRAmzqTK.js",
+      "isDynamicEntry": false
+    }
+  }
+}
