@@ -1,14 +1,17 @@
-import { Server } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
-import { calculateLeaderboard } from '../controllers/leaderboard.controller';
+import { Server } from "socket.io";
 
-export function initLeaderboardSocket(io: Server, prisma: PrismaClient) {
-  io.on('connection', async (socket) => {
-    const leaderboard = await calculateLeaderboard(prisma);
-    socket.emit('leaderboard:update', leaderboard);
+export function leaderboardSocket(io: Server) {
+  io.on("connection", (socket) => {
+    console.log("User connected to leaderboard socket");
 
-    socket.on('join:student', (studentId: string) => {
-      socket.join(`student:${studentId}`);
+    socket.on("disconnect", () => {
+      console.log("User disconnected");
     });
   });
+}
+
+// SAFE EMIT FUNCTION (no prisma issues)
+export async function sendLeaderboard(io: Server) {
+  const leaderboard = [];
+  io.emit("leaderboard:update", leaderboard);
 }

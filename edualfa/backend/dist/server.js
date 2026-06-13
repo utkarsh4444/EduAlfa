@@ -40,6 +40,7 @@ const express_1 = __importStar(require("express"));
 const http_1 = __importDefault(require("http"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const path_1 = __importDefault(require("path"));
 const socket_io_1 = require("socket.io");
 const client_1 = require("@prisma/client");
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
@@ -49,19 +50,25 @@ const leaderboard_routes_1 = __importDefault(require("./routes/leaderboard.route
 const auth_middleware_1 = require("./middleware/auth.middleware");
 const error_middleware_1 = require("./middleware/error.middleware");
 const leaderboard_socket_1 = require("./socket/leaderboard.socket");
+const seedModule = require('../prisma/seed');
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL ?? 'http://localhost:5173',
+        origin: '*',
         methods: ['GET', 'POST'],
         credentials: true,
     },
 });
 const prisma = new client_1.PrismaClient();
-app.use((0, cors_1.default)({ origin: process.env.CLIENT_URL ?? 'http://localhost:5173', credentials: true }));
+// Allow all origins since frontend is served from same server
+app.use((0, cors_1.default)({ credentials: true }));
 app.use((0, express_1.json)());
+app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
+// Serve frontend static files
+const frontendPath = path_1.default.join(__dirname, '../../frontend/dist');
+app.use(express_1.default.static(frontendPath));
 app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', uptime: process.uptime() });
 });
@@ -70,26 +77,49 @@ app.use('/api/admin', (0, auth_middleware_1.authMiddleware)(['admin']), admin_ro
 app.use('/api/student', (0, auth_middleware_1.authMiddleware)(['student']), student_routes_1.default);
 app.use('/api/leaderboard', leaderboard_routes_1.default);
 app.set('io', io);
+// SPA fallback: serve index.html for all non-API routes
+app.get('*', (_req, res) => {
+    res.sendFile(path_1.default.join(frontendPath, 'index.html'));
+});
 app.use(error_middleware_1.errorHandler);
 (0, leaderboard_socket_1.initLeaderboardSocket)(io, prisma);
 const port = Number(process.env.PORT ?? 5000);
 async function seedBadges() {
-    const existing = await prisma.badge.count();
-    if (existing === 0) {
-        await prisma.badge.createMany({
-            data: [
-                { name: 'Top Scholar', description: 'Rank 1 achiever in leaderboard', icon: '🥇', condition: 'rank1', rarity: 'legendary' },
-                { name: 'On Fire', description: '3 quiz streak unlocked', icon: '🔥', condition: 'streak3', rarity: 'rare' },
-                { name: 'Speed Demon', description: 'Fast quiz submission bonus earned', icon: '⚡', condition: 'speed', rarity: 'rare' },
-                { name: 'Perfectionist', description: 'Perfect score achieved', icon: '💯', condition: 'perfect', rarity: 'epic' },
-                { name: 'Subject Expert', description: 'Mastered a subject with high score', icon: '📚', condition: 'subject_expert', rarity: 'uncommon' },
-            ],
-        });
+    const badgeDefinitions = [
+        { name: 'Top Scholar', description: 'Rank 1 achiever in leaderboard', icon: '🥇', condition: 'rank1', rarity: 'legendary' },
+        { name: 'On Fire', description: '3 quiz streak unlocked', icon: '🔥', condition: 'streak3', rarity: 'rare' },
+        { name: 'Speed Demon', description: 'Fast quiz submission bonus earned', icon: '⚡', condition: 'speed', rarity: 'rare' },
+        { name: 'Perfectionist', description: 'Perfect score achieved', icon: '💯', condition: 'perfect', rarity: 'epic' },
+        { name: 'Subject Expert', description: 'Mastered a subject with high score', icon: '📚', condition: 'subject_expert', rarity: 'uncommon' },
+        { name: 'Easy Master', description: 'Scored 80%+ on Easy quiz', icon: '🟢', condition: 'easy_master', rarity: 'uncommon' },
+        { name: 'Medium Master', description: 'Scored 80%+ on Medium quiz', icon: '🟡', condition: 'medium_master', rarity: 'rare' },
+        { name: 'Hard Master', description: 'Scored 80%+ on Hard quiz', icon: '🔴', condition: 'hard_master', rarity: 'epic' },
+        { name: 'Subject Champion', description: 'Completed all three difficulty levels', icon: '🏆', condition: 'subject_champion', rarity: 'legendary' },
+    ];
+    for (const badge of badgeDefinitions) {
+        const existingBadge = await prisma.badge.findFirst({ where: { condition: badge.condition } });
+        if (existingBadge) {
+            await prisma.badge.update({
+                where: { id: existingBadge.id },
+                data: badge,
+            });
+        }
+        else {
+            await prisma.badge.create({ data: badge });
+        }
     }
 }
 async function start() {
     await prisma.$connect();
     await seedBadges();
+    if (seedModule?.main) {
+        try {
+            await seedModule.main();
+        }
+        catch (seedError) {
+            console.error('Error running seed script:', seedError);
+        }
+    }
     server.listen(port, () => {
         console.log(`EduAlfa backend running on http://localhost:${port}`);
     });

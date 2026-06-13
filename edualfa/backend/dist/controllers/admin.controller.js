@@ -122,13 +122,21 @@ async function createQuiz(req, res) {
             questions: { create: questions.map((question, index) => ({
                     questionText: question.questionText,
                     options: JSON.stringify(question.options),
-                    correctAnswer: question.correctAnswer,
+                    correctAnswer: String(question.correctAnswer),
                     points: question.points ?? 10,
                     orderIndex: question.orderIndex ?? index,
                 })) },
         },
         include: { questions: true },
     });
+    try {
+        const io = req.app.get?.('io');
+        if (io)
+            io.emit('quiz:created', quiz);
+    }
+    catch (e) {
+        // safe to ignore socket emit errors
+    }
     return res.status(201).json({ quiz });
 }
 async function updateQuiz(req, res) {
@@ -142,7 +150,7 @@ async function updateQuiz(req, res) {
     const updatedQuestions = questions?.map((question, index) => ({
         questionText: question.questionText,
         options: JSON.stringify(question.options),
-        correctAnswer: question.correctAnswer,
+        correctAnswer: String(question.correctAnswer),
         points: question.points ?? 10,
         orderIndex: question.orderIndex ?? index,
     })) ?? [];
@@ -156,11 +164,25 @@ async function updateQuiz(req, res) {
         },
         include: { questions: true },
     });
+    try {
+        const io = req.app.get?.('io');
+        if (io)
+            io.emit('quiz:updated', updated);
+    }
+    catch (e) { }
     return res.json({ quiz: updated });
 }
 async function deleteQuiz(req, res) {
     const { id } = req.params;
+    // capture subjectId before deletion to notify clients
+    const quiz = await prisma.quiz.findUnique({ where: { id } });
     await prisma.quiz.delete({ where: { id } });
+    try {
+        const io = req.app.get?.('io');
+        if (io)
+            io.emit('quiz:deleted', { id, subjectId: quiz?.subjectId });
+    }
+    catch (e) { }
     return res.status(204).send();
 }
 async function listAttempts(_req, res) {

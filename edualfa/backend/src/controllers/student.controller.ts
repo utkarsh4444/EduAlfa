@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
-import { calculateLeaderboard } from './leaderboard.controller';
+// REMOVE this line OR keep it only if needed safely
 
 const prisma = new PrismaClient();
 
@@ -162,7 +162,8 @@ export async function submitQuiz(req: Request, res: Response) {
         isCorrect = correctStr.length > 0 && selStr === correctStr;
       }
     } catch (e) {
-      isCorrect = selected === question.correctAnswer;
+     isCorrect =
+  String(selected) === String(question.correctAnswer);
     }
 
     if (isCorrect) {

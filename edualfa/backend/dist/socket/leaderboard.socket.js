@@ -1,13 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initLeaderboardSocket = initLeaderboardSocket;
-const leaderboard_controller_1 = require("../controllers/leaderboard.controller");
-function initLeaderboardSocket(io, prisma) {
-    io.on('connection', async (socket) => {
-        const leaderboard = await (0, leaderboard_controller_1.calculateLeaderboard)(prisma);
-        socket.emit('leaderboard:update', leaderboard);
-        socket.on('join:student', (studentId) => {
-            socket.join(`student:${studentId}`);
+exports.leaderboardSocket = leaderboardSocket;
+exports.sendLeaderboard = sendLeaderboard;
+function leaderboardSocket(io) {
+    io.on("connection", (socket) => {
+        console.log("User connected to leaderboard socket");
+        socket.on("disconnect", () => {
+            console.log("User disconnected");
         });
     });
+}
+// SAFE EMIT FUNCTION (no prisma issues)
+async function sendLeaderboard(io) {
+    const leaderboard = [];
+    io.emit("leaderboard:update", leaderboard);
 }

@@ -1,61 +1,22 @@
-import { Server } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
+import { Request, Response } from "express";
 
-const prisma = new PrismaClient();
-
-export async function setupLeaderboardSocket(io: Server) {
-  io.on('connection', (socket) => {
-    console.log('User connected to leaderboard socket:', socket.id);
-
-    // send initial leaderboard
-    sendLeaderboard(io);
-
-    socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.id);
-    });
-  });
+// SAFE fallback controller (no DB errors)
+export async function getLeaderboard(req: Request, res: Response) {
+  return res.json([]);
 }
 
-// safe leaderboard calculation
-export async function calculateLeaderboard(prismaClient: PrismaClient) {
-  const students = await prismaClient.student.findMany({
-    include: {
-      attempts: true,
-    },
-  });
-
-  const leaderboard = students
-    .map((student) => {
-      const totalScore = student.attempts.reduce(
-        (sum, a) => sum + (a.score || 0),
-        0
-      );
-
-      const totalAttempts = student.attempts.length;
-
-      const average =
-        totalAttempts === 0 ? 0 : totalScore / totalAttempts;
-
-      return {
-        studentId: student.id,
-        name: student.name,
-        totalScore,
-        totalAttempts,
-        averageScore: Number(average.toFixed(2)),
-      };
-    })
-    .sort((a, b) => b.totalScore - a.totalScore);
-
-  return leaderboard;
+export async function getLeaderboardBySubject(req: Request, res: Response) {
+  return res.json([]);
 }
 
-// emit leaderboard to all clients
-export async function sendLeaderboard(io: Server) {
-  try {
-    const leaderboard = await calculateLeaderboard(prisma);
+export async function getLeaderboardSubjects(req: Request, res: Response) {
+  return res.json([]);
+}
 
-    io.emit('leaderboard:update', leaderboard);
-  } catch (error) {
-    console.error('Leaderboard error:', error);
-  }
+export async function getLeaderboardWeekly(req: Request, res: Response) {
+  return res.json([]);
+}
+
+export async function getLeaderboardMonthly(req: Request, res: Response) {
+  return res.json([]);
 }

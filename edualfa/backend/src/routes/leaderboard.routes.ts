@@ -1,18 +1,18 @@
-import { Router } from 'express';
+import express from "express";
 import {
   getLeaderboard,
   getLeaderboardBySubject,
   getLeaderboardSubjects,
   getLeaderboardWeekly,
   getLeaderboardMonthly,
-} from '../controllers/leaderboard.controller';
+} from "../controllers/leaderboard.controller";
 
-const router = Router();
+const router = express.Router();
 
-router.get('/', getLeaderboard);
-router.get('/weekly', getLeaderboardWeekly);
-router.get('/monthly', getLeaderboardMonthly);
-router.get('/subjects', getLeaderboardSubjects);
-router.get('/subject/:id', getLeaderboardBySubject);
+router.get("/", getLeaderboard);
+router.get("/subject", getLeaderboardBySubject);
+router.get("/subjects", getLeaderboardSubjects);
+router.get("/weekly", getLeaderboardWeekly);
+router.get("/monthly", getLeaderboardMonthly);
 
 export default router;
