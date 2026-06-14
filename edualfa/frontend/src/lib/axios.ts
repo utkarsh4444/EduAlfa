@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const baseURL = '/api';
+
+// Use the Vite proxy in development to keep frontend and backend on the same origin.
+// In production, this will also use the same relative API path.
+
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
   withCredentials: true,
 });
 

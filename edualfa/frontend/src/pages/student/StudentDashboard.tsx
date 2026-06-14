@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ScoreCard } from '../../components/ui/ScoreCard';
 import { BadgePopup } from '../../components/ui/BadgePopup';
 import { useLeaderboard } from '../../hooks/useLeaderboard';
+import { useSocket } from '../../hooks/useSocket';
 import QuickActions from '../../components/dashboard/QuickActions';
 
 interface SubjectType {
@@ -41,6 +42,7 @@ export default function StudentDashboard() {
   const [attempts, setAttempts] = useState<AttemptType[]>([]);
   const [badges, setBadges] = useState<{ badge: { name: string; rarity: string; icon: string } }[]>([]);
   const { leaderboard } = useLeaderboard();
+  const socket = useSocket();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -50,6 +52,19 @@ export default function StudentDashboard() {
       setBadges(response.data.profile.badges ?? []);
     });
   }, []);
+
+  // refresh attempts/profile when leaderboard updates (e.g., after a quiz submit)
+  useEffect(() => {
+    if (!socket) return;
+    const handler = () => {
+      api.get('/student/attempts').then((response) => setAttempts(response.data.attempts)).catch(() => {});
+      api.get('/student/profile').then((response) => setBadges(response.data.profile.badges ?? [])).catch(() => {});
+    };
+    socket.on('leaderboard:update', handler);
+    return () => {
+      socket.off('leaderboard:update', handler);
+    };
+  }, [socket]);
 
   const stats = useMemo(() => {
     const quizzes = attempts.length;
@@ -67,7 +82,7 @@ export default function StudentDashboard() {
           return diff === 1 ? days + 1 : days;
         }, 1)
       : 0;
-    const rank = user ? leaderboard.find((entry) => entry.studentId === user.id)?.rank ?? 0 : 0;
+    const rank = user ? leaderboard?.find((entry) => entry.studentId === user.id)?.rank ?? 0 : 0;
     const uniqueQuizIds = new Set(attempts.map((attempt) => attempt.quiz.id)).size;
     const totalAvailableQuizzes = subjects.reduce((count, subject) => count + subject.quizzes.length, 0);
     const completion = totalAvailableQuizzes ? Math.round((uniqueQuizIds / totalAvailableQuizzes) * 100) : 0;

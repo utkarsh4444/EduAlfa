@@ -6,7 +6,7 @@ export function useSocket() {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const client = io({
+    const client = io('http://localhost:5000', {
       transports: ['websocket'],
     });
     setSocket(client);

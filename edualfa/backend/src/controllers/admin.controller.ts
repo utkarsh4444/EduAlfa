@@ -57,6 +57,18 @@ export async function updateStudent(req: Request, res: Response) {
 
 export async function deleteStudent(req: Request, res: Response) {
   const { id } = req.params;
+  const student = await prisma.student.findUnique({ where: { id } });
+  if (!student) {
+    return res.status(404).json({ error: 'Student not found' });
+  }
+
+  // Remove dependent records before deleting the student to avoid foreign key constraint issues.
+  await prisma.quizAttempt.deleteMany({ where: { studentId: id } });
+  await prisma.studentBadge.deleteMany({ where: { studentId: id } });
+  await prisma.studentAchievement.deleteMany({ where: { studentId: id } });
+  await prisma.studentStreak.deleteMany({ where: { studentId: id } });
+  await prisma.studentStats.deleteMany({ where: { studentId: id } });
+
   await prisma.student.delete({ where: { id } });
   return res.status(204).send();
 }

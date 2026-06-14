@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../../lib/axios';
+import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 interface Question {
   id: string;
@@ -22,6 +24,7 @@ interface Quiz {
 export default function QuizAttempt() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number | number[] | string>>({});
@@ -122,6 +125,10 @@ export default function QuizAttempt() {
     try {
       const response = await api.post(`/student/quizzes/${quiz.id}/submit`, { answers, timeTaken: quiz.duration * 60 - timeLeft });
       localStorage.removeItem(`quiz_save_${quiz.id}`);
+      // refresh authenticated user so dashboard/header reflects updated totalScore
+      try {
+        await refreshUser();
+      } catch {}
       navigate('/student/quiz-result', {
         state: {
           quizTitle: quiz.title,
@@ -130,8 +137,12 @@ export default function QuizAttempt() {
           attempt: response.data.attempt,
         },
       });
-    } catch {
-      // ignore
+    } catch (err: any) {
+      // surface error to user via toast
+      // eslint-disable-next-line no-console
+      console.error('Submit error', err);
+      const msg = err?.response?.data?.error || err?.message || 'Failed to submit quiz. Please try again.';
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
       setShowConfirm(false);

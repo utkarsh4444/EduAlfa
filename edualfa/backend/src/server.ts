@@ -11,7 +11,7 @@ import studentRoutes from './routes/student.routes';
 import leaderboardRoutes from './routes/leaderboard.routes';
 import { authMiddleware } from './middleware/auth.middleware';
 import { errorHandler } from './middleware/error.middleware';
-import { initLeaderboardSocket } from './socket/leaderboard.socket';
+import { leaderboardSocket } from './socket/leaderboard.socket';
 import bcrypt from 'bcryptjs';
 
 const seedModule: any = require('../prisma/seed');
@@ -29,8 +29,13 @@ const io = new SocketIOServer(server, {
 });
 const prisma = new PrismaClient();
 
-// Allow all origins since frontend is served from same server
-app.use(cors({ credentials: true }));
+// Allow requests from the frontend dev server and support credentials
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+    credentials: true,
+  }),
+);
 app.use(json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -44,7 +49,9 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', authMiddleware(['admin']), adminRoutes);
-app.use('/api/student', authMiddleware(['student']), studentRoutes);
+// student routes: public quiz access and submission remain public;
+// apply auth middleware to protected endpoints inside the router instead
+app.use('/api/student', studentRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 
 app.set('io', io);
@@ -56,7 +63,7 @@ app.get('*', (_req: Request, res: Response) => {
 
 app.use(errorHandler);
 
-initLeaderboardSocket(io, prisma);
+leaderboardSocket(io);
 
 const port = Number(process.env.PORT ?? 5000);
 

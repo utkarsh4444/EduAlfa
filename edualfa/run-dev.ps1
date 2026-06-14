@@ -1,7 +1,7 @@
 Set-Location $PSScriptRoot
 
 $backendCmd = 'cd .\backend; npm run dev'
-$frontendCmd = 'cd .\frontend; npm run dev -- --host 0.0.0.0'
+$frontendCmd = 'cd .\frontend; npm run dev'
 
 Write-Host "Starting backend in a new PowerShell window..."
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd

@@ -20,7 +20,15 @@ export function useLeaderboard() {
     const loadLeaderboard = async () => {
       try {
         const response = await api.get('/leaderboard');
-        setLeaderboard(response.data.leaderboard);
+        const leaderboardData = response.data.leaderboard;
+        const list = Array.isArray(leaderboardData) ? leaderboardData : [];
+        setLeaderboard(list);
+        // initialize previous ranks to current ranks so arrows show on subsequent updates
+        const initialPrev: Record<string, number> = {};
+        list.forEach((e: any, idx: number) => {
+          initialPrev[e.studentId] = e.rank ?? idx + 1;
+        });
+        setPreviousRanks(initialPrev);
       } catch {
         // ignore fetch errors
       }

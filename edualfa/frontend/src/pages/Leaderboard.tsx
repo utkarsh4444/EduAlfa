@@ -17,7 +17,13 @@ export default function Leaderboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get('/leaderboard/subjects').then((response) => setSubjectOptions(response.data.subjects)).catch(() => setSubjectOptions([]));
+    api
+      .get('/leaderboard/subjects')
+      .then((response) => {
+        const subjects = Array.isArray(response.data) ? response.data : response.data.subjects ?? [];
+        setSubjectOptions(subjects);
+      })
+      .catch(() => setSubjectOptions([]));
   }, []);
 
   useEffect(() => {
@@ -29,7 +35,8 @@ export default function Leaderboard() {
         if (selectedRange !== 'all') query.set('range', selectedRange);
         if (selectedSubject !== 'all') query.set('subjectId', selectedSubject);
         const response = await api.get(`/leaderboard${query.toString() ? `?${query.toString()}` : ''}`);
-        setDisplayed(response.data.leaderboard);
+        const lb = Array.isArray(response.data) ? response.data : response.data.leaderboard ?? [];
+        setDisplayed(lb);
       } catch {
         setError('Could not load leaderboard. Showing current results.');
         setDisplayed(leaderboard);
@@ -40,6 +47,12 @@ export default function Leaderboard() {
 
     loadLeaderboard();
   }, [selectedRange, selectedSubject, leaderboard]);
+
+  useEffect(() => {
+    if (selectedSubject === 'all' && selectedRange === 'all') {
+      setDisplayed(leaderboard);
+    }
+  }, [leaderboard, selectedSubject, selectedRange]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#0A0A0F] to-[#1A1A24] flex flex-col p-4 sm:p-6 md:p-8">
